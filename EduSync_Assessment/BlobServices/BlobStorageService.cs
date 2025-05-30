@@ -23,8 +23,8 @@ namespace EduSync_Assessment.BlobServices
 
         public BlobStorageService(IConfiguration configuration)
         {
-            var connectionString = configuration["AzureBlobStorage:ConnectionString"];
-            _containerName = configuration["AzureBlobStorage:ContainerName"];
+            var connectionString = configuration["MyBlob:ConnectionString"];
+            _containerName = configuration["MyBlob:ContainerName"];
 
             _blobServiceClient = new BlobServiceClient(connectionString);
             _containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
@@ -32,7 +32,6 @@ namespace EduSync_Assessment.BlobServices
             // Ensure container exists
             _containerClient.CreateIfNotExists(PublicAccessType.Blob);
         }
-
         public async Task<string> UploadFileAsync(IFormFile file)
         {
             if (file == null || file.Length == 0)

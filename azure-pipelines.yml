@@ -59,4 +59,9 @@ steps:
     DeploymentType: 'webDeploy'
     RemoveAdditionalFilesFlag: true
     AdditionalArguments: '-retryAttempts:6 -retryInterval:10000'
-    AppSettings: '-ASPNETCORE_ENVIRONMENT Production -ASPNETCORE_DETAILEDERRORS true' 
+    AppSettings: |
+      -ASPNETCORE_ENVIRONMENT Production
+      -ASPNETCORE_DETAILEDERRORS true
+      -ConnectionStrings__DefaultConnection "$(DefaultConnection)"
+      -MyBlob__ConnectionString "$(BlobConnection)"
+      -MyBlob__ContainerName "course-media" 

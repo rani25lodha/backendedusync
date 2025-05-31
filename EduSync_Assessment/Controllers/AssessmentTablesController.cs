@@ -129,7 +129,7 @@ namespace EduSync_Assessment.Controllers
 
             var assessments = await _context.AssessmentTables
                 .Include(a => a.Course)
-                .Where(a => a.Course.InstructorId.ToString() == instructorId)
+                .Where(a => a.Course != null && a.Course.InstructorId.ToString() == instructorId)
                 .Select(a => new AssessmentReadDto
                 {
                     AssessmentId = a.AssessmentId,

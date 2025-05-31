@@ -29,15 +29,15 @@ namespace EduSync_Assessment.Controllers
                 .Include(r => r.Assessment)
                     .ThenInclude(a => a.Course)
                 .Include(r => r.User)
-                .Where(r => r.Assessment.Course.InstructorId == instructorId)
+                .Where(r => r.Assessment != null && r.Assessment.Course != null && r.Assessment.Course.InstructorId == instructorId)
                 .Select(r => new
                 {
-                    StudentName = r.User.Name,
-                    StudentEmail = r.User.Email,
-                    AssessmentTitle = r.Assessment.Title,
-                    CourseTitle = r.Assessment.Course.Title,
+                    StudentName = r.User != null ? r.User.Name : "Unknown",
+                    StudentEmail = r.User != null ? r.User.Email : "Unknown",
+                    AssessmentTitle = r.Assessment != null ? r.Assessment.Title : "Unknown",
+                    CourseTitle = r.Assessment?.Course != null ? r.Assessment.Course.Title : "Unknown",
                     Score = r.Score,
-                    MaxScore = r.Assessment.MaxScore,
+                    MaxScore = r.Assessment != null ? r.Assessment.MaxScore : 0,
                     AttemptDate = r.AttemptDate
                 })
                 .ToListAsync();

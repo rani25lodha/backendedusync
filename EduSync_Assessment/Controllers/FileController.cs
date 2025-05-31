@@ -219,7 +219,7 @@ namespace EduSync_Assessment.Controllers
     // Request model for URL uploads
     public class UrlUploadRequest
     {
-        public string Url { get; set; }
-        public string Title { get; set; }
+        public required string Url { get; set; }
+        public required string Title { get; set; }
     }
 }

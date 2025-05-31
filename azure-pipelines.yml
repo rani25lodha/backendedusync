@@ -44,24 +44,32 @@ steps:
     verbosityRestore: 'Detailed'
 
 - task: DotNetCoreCLI@2
-  displayName: 'Build the project'
+  displayName: 'Build main project'
   inputs:
     command: 'build'
-    projects: '**/*.csproj'
+    projects: '**/EduSync_Assessment.csproj'
+    arguments: '--configuration $(buildConfiguration) --no-restore'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Build test project'
+  inputs:
+    command: 'build'
+    projects: '**/EduSync_Assessment.Tests.csproj'
     arguments: '--configuration $(buildConfiguration) --no-restore'
 
 - task: DotNetCoreCLI@2
   displayName: 'Run tests'
   inputs:
     command: 'test'
-    projects: '**/*Tests/*.csproj'
-    arguments: '--configuration $(buildConfiguration) --no-build'
+    projects: '**/EduSync_Assessment.Tests.csproj'
+    arguments: '--configuration $(buildConfiguration) --no-build --collect:"XPlat Code Coverage"'
+    publishTestResults: true
 
 - task: DotNetCoreCLI@2
   displayName: 'Publish the project'
   inputs:
     command: 'publish'
-    projects: '**/*.csproj'
+    projects: '**/EduSync_Assessment.csproj'
     publishWebProjects: true
     arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) --no-build /p:UseAppHost=false'
     zipAfterPublish: true

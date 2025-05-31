@@ -2,66 +2,68 @@ trigger:
 - main
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: 'ubuntu-latest'
 
 variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
-  dotnetVersion: '8.0.x'  # Adjust this version based on your project's target framework
-  webAppName: 'webappedusync'
-  resourceGroup: 'edusync'
+- name: buildConfiguration
+  value: 'Release'
+- name: webAppName
+  value: 'webappedusync'
+- name: resourceGroup
+  value: 'edusync'
+- name: ASPNETCORE_ENVIRONMENT
+  value: 'Production'
+- name: ASPNETCORE_DETAILED_ERRORS
+  value: 'true'
 
 steps:
+- checkout: self
+  clean: true
+  fetchDepth: 1
+
 - task: UseDotNet@2
   inputs:
-    version: '$(dotnetVersion)'
-    includePreviewVersions: true
+    packageType: 'sdk'
+    version: '8.x'
+  displayName: 'Install .NET SDK'
 
-- task: NuGetToolInstaller@1
+- script: |
+    ls -la
+    pwd
+    dotnet restore
+  displayName: 'Restore Dependencies'
 
-- task: NuGetCommand@2
+- script: |
+    dotnet build --configuration $(buildConfiguration) --no-restore
+  displayName: 'Build .NET Project'
+
+- task: DotNetCoreCLI@2
   inputs:
-    restoreSolution: '$(solution)'
+    command: 'test'
+    projects: '**/*Tests/*.csproj'
+    arguments: '--configuration $(buildConfiguration) --no-restore'
+  displayName: 'Run Tests'
 
-- task: VSBuild@1
-  inputs:
-    solution: '$(solution)'
-    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+- script: |
+    dotnet publish -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-build
+  displayName: 'Publish .NET Project'
 
-- task: VSTest@2
+- script: |
+    echo "Checking published artifact directory: $(Build.ArtifactStagingDirectory)"
+    ls -la $(Build.ArtifactStagingDirectory)
+  displayName: 'Verify Published Files'
+
+- task: AzureWebApp@1
+  displayName: 'Deploy to Azure App Service'
   inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
-    testSelector: 'testAssemblies'
-    testAssemblyVer2: |
-      **\*Tests.dll
-      !**\*TestAdapter.dll
-      !**\obj\**
+    azureSubscription: 'AzureConnection'
+    appType: 'webApp'
+    appName: '$(webAppName)'
+    package: '$(Build.ArtifactStagingDirectory)'
+    deploymentMethod: 'auto'
 
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     ArtifactName: 'drop'
-    publishLocation: 'Container'
-
-# Deploy to Azure Web App
-- task: AzureRmWebAppDeployment@4
-  inputs:
-    ConnectionType: 'AzureRM'
-    azureSubscription: 'AzureConnection'
-    appType: 'webApp'
-    WebAppName: '$(webAppName)'
-    packageForLinux: '$(Build.ArtifactStagingDirectory)/**/*.zip'
-    enableCustomDeployment: true
-    DeploymentType: 'webDeploy'
-    RemoveAdditionalFilesFlag: true
-    AdditionalArguments: '-retryAttempts:6 -retryInterval:10000'
-    AppSettings: |
-      -ASPNETCORE_ENVIRONMENT Production
-      -ASPNETCORE_DETAILEDERRORS true
-      -ConnectionStrings__DefaultConnection "$(DefaultConnection)"
-      -MyBlob__ConnectionString "$(BlobConnection)"
-      -MyBlob__ContainerName "course-media" 
+    publishLocation: 'Container' 

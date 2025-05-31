@@ -33,7 +33,7 @@ steps:
   inputs:
     command: custom
     custom: nuget
-    arguments: 'locals all -clear'
+    arguments: 'locals all --clear'
 
 - task: DotNetCoreCLI@2
   displayName: 'Restore project dependencies'

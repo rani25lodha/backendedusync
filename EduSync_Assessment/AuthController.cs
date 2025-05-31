@@ -90,28 +90,24 @@ namespace EduSync_Assessment.Controllers
         private string GenerateJwtToken(UserTable user)
         {
             var jwtSettings = _configuration.GetSection("Jwt");
-            var keyString = jwtSettings["Key"] ?? throw new InvalidOperationException("JWT Key is not configured");
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Email ?? "unknown"),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Email),
                 new Claim("UserId", user.UserId.ToString()),
                 new Claim(ClaimTypes.Role, user.Role ?? "Student"),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString())
+
             };
 
-            var issuer = jwtSettings["Issuer"] ?? throw new InvalidOperationException("JWT Issuer is not configured");
-            var audience = jwtSettings["Audience"] ?? throw new InvalidOperationException("JWT Audience is not configured");
-            var durationStr = jwtSettings["DurationInMinutes"] ?? "60";
-
             var token = new JwtSecurityToken(
-                issuer: issuer,
-                audience: audience,
+                issuer: jwtSettings["Issuer"],
+                audience: jwtSettings["Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(Convert.ToDouble(durationStr)),
+                expires: DateTime.UtcNow.AddMinutes(Convert.ToDouble(jwtSettings["DurationInMinutes"])),
                 signingCredentials: creds
             );
 
@@ -121,18 +117,18 @@ namespace EduSync_Assessment.Controllers
 
     public class LoginDto
     {
-        public required string Email { get; set; }
-        public required string Password { get; set; }
+        public string Email { get; set; }
+        public string Password { get; set; }
     }
 
     public class ForgotPasswordDto
     {
-        public required string Email { get; set; }
+        public string Email { get; set; }
     }
 
     public class ResetPasswordDto
     {
-        public required string Token { get; set; }
-        public required string NewPassword { get; set; }
+        public string Token { get; set; }
+        public string NewPassword { get; set; }
     }
 }
